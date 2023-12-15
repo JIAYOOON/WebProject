@@ -6,10 +6,10 @@ const questions = [    {        question: "1. 나는 새로운 사람들과의 �
                        {        question: "6. 나는 미래에 대한 비전을 갖고 있다.",        options: {            A: "그렇다",            B: "아니다"        }    },
                        {        question: "7. 타인의 감정에 민감하게 반응한다.",        options: {            A: "그렇다",            B: "아니다"        }    },
                        {        question: "8. 문제를 해결할 때 감정에 의존하게 된다.",        options: {            A: "그렇다",            B: "아니다"        }    },
-                       {        question: "9. 의사 결정 시 객관적인 논리를 중요시한다.",        options: {            A: "그렇다",            B: "아니다"        }    },
+                       {        question: "9. 의사 결정 시 순간의 감정에 영향을 받는다.",        options: {            A: "그렇다",            B: "아니다"        }    },
                        {        question: "10. 계획 없이 일을 하는 것을 선호한다.",        options: {            A: "그렇다",            B: "아니다"        }    },
-                       {        question: "11. 계획을 세우고 구체적인 일정을 따르는 것을 선호한다.",        options: {            A: "그렇다",            B: "아니다"        }    },
-                       {        question: "12. 일정을 빠르게 조직하고 결정한다.",        options: {            A: "그렇다",            B: "아니다"        }    }
+                       {        question: "11. 계획을 세우지만 이행하지 못한다.",        options: {            A: "그렇다",            B: "아니다"        }    },
+                       {        question: "12. 일정을 빠르게 결정하지 못한다.",        options: {            A: "그렇다",            B: "아니다"        }    }
                   ];
 
 const mbtiTypes = {
@@ -82,160 +82,138 @@ const mbtiTypes = {
 let currentQuestion = 0;
 let answers = {};
 
-const showQuestion = () => {
-    const questionEl = document.querySelector("#question");
-    questionEl.innerHTML = `
-        <p>${questions[currentQuestion].question}</p>
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="question${currentQuestion + 1}" value="A" id="question${currentQuestion + 1}A">
-            <label class="form-check-label" for="question${currentQuestion + 1}A">
-                ${questions[currentQuestion].options.A}
-            </label>
-        </div>
-        <div class="form-check">
-            <input class="form-check-input" type="radio" name="question${currentQuestion + 1}" value="B" id="question${currentQuestion + 1}B">
-            <label class="form-check-label" for="question${currentQuestion + 1}B">
-                ${questions[currentQuestion].options.B}
-            </label>
-        </div>
-        <button id="next-btn" class="btn btn-primary mt-3">다음</button>
-    `;
-};
 
-const showResult = (mbtiType) => {
-    const resultEl = document.querySelector("#result");
-    resultEl.classList.remove("d-none");
+const showResultPage = (mbtiType) => {
+    const questionSection = document.getElementById("question");
+    questionSection.style.display = "none"; // 질문 섹션을 숨김
+
+    const resultSection = document.getElementById("result");
+    resultSection.style.display = "block"; // 결과 섹션을 보여줌
+
     const mbtiTypeEl = document.querySelector("#mbti-type");
     const mbtiDescEl = document.querySelector("#mbti-desc");
     mbtiTypeEl.innerText = mbtiType.type;
     mbtiDescEl.innerText = mbtiType.desc;
+
+    // 결과 페이지에서 첫 페이지로 돌아가는 링크
+    const restartButton = document.getElementById("restart-btn");
+    restartButton.addEventListener("click", restartTest);
 };
 
-document.addEventListener("DOMContentLoaded", function() {
-  showQuestion();
+const showResult = () => {
+    let typeCounts = {
+        I: 0,
+        E: 0,
+        S: 0,
+        N: 0,
+        T: 0,
+        F: 0,
+        J: 0,
+        P: 0
+    };
 
-  document.getElementById("question").addEventListener("click", function(event) {
-      if (event.target && event.target.id === "next-btn") {
-          const answer = document.querySelector(`input[name="question${currentQuestion + 1}"]:checked`);
-          if (answer) {
-              answers[currentQuestion] = answer.value;
-              currentQuestion++;
-              if (currentQuestion < questions.length) {
-                  showQuestion();
-              } else {
-                  let typeCounts = {
-                      I: 0,
-                      E: 0,
-                      S: 0,
-                      N: 0,
-                      T: 0,
-                      F: 0,
-                      J: 0,
-                      P: 0
-                  };
+    for (let i = 0; i < questions.length; i++) {
+        const answer = answers[i];
+        if (answer === 'A') {
+            if (i < 3) {
+                typeCounts['E'] += 1; // 1 ~ 3번째 질문: 'A' 선택 시 Extraversion(E)에 1점 추가
+            } else if (i < 6) {
+                typeCounts['N'] += 1; // 4 ~ 6번째 질문: 'A' 선택 시 Intuition(N)에 1점 추가
+            } else if (i < 8) {
+                typeCounts['F'] += 1; // 7 ~ 8번째 질문: 'A' 선택 시 Feeling(F)에 1점 추가
+            } else {
+                typeCounts['P'] += 1; // 9 ~ 12번째 질문: 'A' 선택 시 Perception(P)에 1점 추가
+            }
+        } else {
+            // 'B' 선택 시 해당하는 유형에 1점 추가
+            if (i < 3) {
+                typeCounts['I'] += 1;
+            } else if (i < 6) {
+                typeCounts['S'] += 1;
+            } else if (i < 8) {
+                typeCounts['T'] += 1;
+            } else {
+                typeCounts['J'] += 1;
+            }
+        }
+    }
 
-                  if (answers[0] === 'A') {
-                    typeCounts['E'] += 1; // 'A'일 때 Extraversion(E)에 1점 추가
-                } else {
-                    typeCounts['I'] += 1; // 'B'일 때 Introversion(I)에 1점 추가
-                }
+    let mbtiType = '';
+    mbtiType += typeCounts['E'] > typeCounts['I'] ? 'E' : 'I';
+    mbtiType += typeCounts['S'] > typeCounts['N'] ? 'S' : 'N';
+    mbtiType += typeCounts['T'] > typeCounts['F'] ? 'T' : 'F';
+    mbtiType += typeCounts['J'] > typeCounts['P'] ? 'J' : 'P';
 
-                  if (answers[1] === 'A') {
-                  typeCounts['E'] += 1; 
-                } else {
-                  typeCounts['I'] += 1; 
-                }
-
-                  if (answers[2] === 'A') {
-                typeCounts['E'] += 1; 
-                 }else {
-                typeCounts['I'] += 1; 
-                } 
-
-                 if (answers[3] === 'A') {
-                  typeCounts['N'] += 1; 
-                } else {
-                 typeCounts['S'] += 1; 
-                }
-
-                 if (answers[4] === 'A') {
-                  typeCounts['N'] += 1; 
-                } else {
-                 typeCounts['S'] += 1; 
-                }
-
-                 if (answers[5] === 'A') {
-                  typeCounts['N'] += 1; 
-                } else {
-                  typeCounts['S'] += 1; 
-                }
-
-                 if (answers[6] === 'A') {
-                 typeCounts['F'] += 1; 
-                } else {
-                 typeCounts['T'] += 1; 
-                } 
-
-                 if (answers[7] === 'A') {
-                  typeCounts['F'] += 1; 
-                } else {
-                 typeCounts['T'] += 1; 
-                } 
-
-                 if (answers[8] === 'A') {
-                 typeCounts['T'] += 1; 
-                } else {
-                 typeCounts['F'] += 1; 
-                }
-
-                 if (answers[9] === 'A') {
-                 typeCounts['P'] += 1; 
-                } else {
-                  typeCounts['J'] += 1; 
-                } 
-
-                 if (answers[10] === 'A') {
-                 typeCounts['J'] += 1; 
-                } else {
-                 typeCounts['P'] += 1; 
-                }
-
-                 if (answers[11] === 'A') {
-                 typeCounts['J'] += 1; 
-                } else {
-                 typeCounts['P'] += 1; 
-                }
-
-
-
-
-
-
-                  let mbtiType = '';
-                  mbtiType += typeCounts['E'] > typeCounts['I'] ? 'E' : 'I';
-                  mbtiType += typeCounts['S'] > typeCounts['N'] ? 'S' : 'N';
-                  mbtiType += typeCounts['T'] > typeCounts['F'] ? 'T' : 'F';
-                  mbtiType += typeCounts['J'] > typeCounts['P'] ? 'J' : 'P';
-                  showResult(mbtiTypes[mbtiType]);
-              }
-          }
-      }
-  });
-
-  document.getElementById("result").addEventListener("click", function(event) {
-      if (event.target && event.target.id === "restart-btn") {
-          restartTest();
-      }
-  });
-});
+    showResultPage(mbtiTypes[mbtiType]);
+};
 
 const restartTest = () => {
-  currentQuestion = 0;
-  answers = {};
-  const resultEl = document.querySelector("#result");
-  resultEl.classList.add("d-none");
-  showQuestion();
+    // 테스트 초기화 로직
+    currentQuestion = 0;
+    answers = {};
+
+    // 결과 섹션 숨기고 질문 섹션 보이기
+    const resultSection = document.getElementById("result");
+    resultSection.style.display = "none";
+
+    const questionSection = document.getElementById("question");
+    questionSection.style.display = "block";
+
+    showQuestion(); // 다시 테스트 시작
 };
 
+document.addEventListener("DOMContentLoaded", function () {
+    const showQuestion = () => {
+        const questionEl = document.querySelector("#question");
+        if (currentQuestion < questions.length) {
+            questionEl.innerHTML = `
+                <p>${questions[currentQuestion].question}</p>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="question${currentQuestion + 1}" value="A" id="question${currentQuestion + 1}A">
+                    <label class="form-check-label" for="question${currentQuestion + 1}A">
+                        ${questions[currentQuestion].options.A}
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="question${currentQuestion + 1}" value="B" id="question${currentQuestion + 1}B">
+                    <label class="form-check-label" for="question${currentQuestion + 1}B">
+                        ${questions[currentQuestion].options.B}
+                    </label>
+                </div>
+                <button id="next-btn" class="btn btn-primary mt-3">다음</button>
+            `;
 
-    
+            const nextButton = document.getElementById("next-btn");
+            nextButton.addEventListener("click", handleNext);
+        } else {
+            showResult();
+        }
+    };
+
+    const handleNext = () => {
+        const answer = document.querySelector(`input[name="question${currentQuestion + 1}"]:checked`);
+        if (answer) {
+            answers[currentQuestion] = answer.value;
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                showQuestion();
+            } else {
+                showResult();
+            }
+        } else {
+            alert("답변을 선택해주세요!");
+        }
+    };
+
+    showQuestion();
+});
+
+document.getElementById("result").addEventListener("click", function (event) {
+    if (event.target && event.target.id === "restart-btn") {
+        restartTest();
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+    showQuestion(); // 첫 번째 질문 표시
+});
